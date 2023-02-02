@@ -20,6 +20,7 @@
 #ifndef SDL_SCREEN_H_
 #define SDL_SCREEN_H_
 
+#include <SDL.h>
 #include <cstdint>
 
 // Logical screen size
@@ -39,7 +40,7 @@ class Screen{
 
         // registerTexture() must return (nearly) consecutive texture IDs.
         // If the backend does not guarantee consecutive integers, the implementation
-        /          / must maintain an internal translation table.
+        // must maintain an internal translation table.
         unsigned registerTexture(unsigned width, unsigned height, const uint32_t *data);
         unsigned registerTexture(unsigned width, unsigned height, const uint8_t *data,
         	const uint8_t *palette, unsigned firstcolor, unsigned colors);

@@ -17,9 +17,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <SDL.h>
+
 #include <stdexcept>
-#include "screen_class.h"
+#include "screen.h"
 
 #define WINDOW_TITLE "OpenOrion2"
 
