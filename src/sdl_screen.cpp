@@ -19,7 +19,7 @@
 
 #include <SDL.h>
 #include <stdexcept>
-#include "screen.h"
+#include "screen_class.h"
 
 #define WINDOW_TITLE "OpenOrion2"
 
@@ -27,13 +27,33 @@ struct Texture {
 	SDL_Surface *palsurf, *drawsurf;
 };
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture *framebuffer = NULL;
-SDL_Surface *drawbuffer = NULL;
-Texture *textures = NULL;
-size_t texture_count = 0, texture_max = 0;
-uint32_t amask = 0, rmask = 0, gmask = 0, bmask = 0;
+Screen::Screen(void){
+    window = NULL;
+    renderer = NULL;
+    framebuffer = NULL;
+    drawbuffer = NULL;
+    textures = NULL;
+    texture_count = 0;
+    texture_max = 0;
+    amask = 0;
+    rmask = 0;
+    gmask = 0;
+    bmask = 0;
+}
+
+Screen::~Screen(void){
+    delete window;
+    delete renderer;
+    delete framebuffer;
+    delete drawbuffer;
+    delete textures;
+    delete texture_count;
+    delete texture_max
+    delete amask;
+    delete rmask;
+    delete gmask;
+    delete bmask;
+}
 
 static void resizeTextureRegistry(void) {
 	Texture *tmp;
@@ -47,7 +67,7 @@ static void resizeTextureRegistry(void) {
 	texture_max = size;
 }
 
-void initScreen(void) {
+void Screen::initScreen(void) {
 	unsigned flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN;
 	uint8_t *ptr;
 
@@ -94,7 +114,7 @@ void initScreen(void) {
 	}
 }
 
-void shutdownScreen(void) {
+void Screen::shutdownScreen(void) {
 	size_t i;
 
 	for (i = 0; i < texture_count; i++) {
@@ -126,14 +146,14 @@ void shutdownScreen(void) {
 	SDL_Quit();
 }
 
-void redrawScreen(void) {
+void Screen::redrawScreen(void) {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
 	SDL_RenderPresent(renderer);
 	SDL_UpdateWindowSurface(window);
 }
 
-void updateScreen(void) {
+void Screen::updateScreen(void) {
 	int pitch, access, width, height;
 	uint32_t format;
 	void *pixels;
@@ -163,7 +183,7 @@ void updateScreen(void) {
 	redrawScreen();
 }
 
-unsigned registerTexture(unsigned width, unsigned height, const uint32_t *data) {
+unsigned Screen::registerTexture(unsigned width, unsigned height, const uint32_t *data) {
 	SDL_Surface *surf;
 	uint8_t *pixptr;
 	unsigned i;
@@ -197,7 +217,7 @@ unsigned registerTexture(unsigned width, unsigned height, const uint32_t *data) 
 	return texture_count++;
 }
 
-unsigned registerTexture(unsigned width, unsigned height, const uint8_t *data,
+unsigned Screen::registerTexture(unsigned width, unsigned height, const uint8_t *data,
 	const uint8_t *palette, unsigned firstcolor, unsigned colors) {
 
 	SDL_Surface *surf;
@@ -242,7 +262,7 @@ unsigned registerTexture(unsigned width, unsigned height, const uint8_t *data,
 	return texid;
 }
 
-void setTexturePalette(unsigned id, const uint8_t *palette,
+void Screen::setTexturePalette(unsigned id, const uint8_t *palette,
 	unsigned firstcolor, unsigned colors) {
 
 	unsigned i;
@@ -290,7 +310,7 @@ void setTexturePalette(unsigned id, const uint8_t *palette,
 	textures[id].drawsurf = surf;
 }
 
-void freeTexture(unsigned id) {
+void Screen::freeTexture(unsigned id) {
 	Texture *tex;
 
 	if (id >= texture_count) {
@@ -318,7 +338,7 @@ void freeTexture(unsigned id) {
 	}
 }
 
-void drawTexture(unsigned id, int x, int y) {
+void Screen::drawTexture(unsigned id, int x, int y) {
 	SDL_Rect dst = {x, y, 0, 0};
 
 	if (id >= texture_count || !textures[id].drawsurf) {
@@ -328,7 +348,7 @@ void drawTexture(unsigned id, int x, int y) {
 	SDL_BlitSurface(textures[id].drawsurf, NULL, drawbuffer, &dst);
 }
 
-void drawTextureTile(unsigned id, int x, int y, int offsx, int offsy,
+void Screen::drawTextureTile(unsigned id, int x, int y, int offsx, int offsy,
 	unsigned width, unsigned height) {
 	SDL_Rect src = {offsx, offsy, (int)width, (int)height};
 	SDL_Rect dst = {x, y, SCREEN_WIDTH, SCREEN_HEIGHT};
@@ -340,7 +360,7 @@ void drawTextureTile(unsigned id, int x, int y, int offsx, int offsy,
 	SDL_BlitSurface(textures[id].drawsurf, &src, drawbuffer, &dst);
 }
 
-void drawLine(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b) {
+void Screen::drawLine(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b) {
 	int x, y, dx = 1, dy = 1;
 	unsigned xlen, ylen, steps, len, cur, i = 0;
 	uint32_t color = SDL_MapRGB(drawbuffer->format, r, g, b);
@@ -383,7 +403,7 @@ void drawLine(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b) {
 	}
 }
 
-void drawRect(int x, int y, unsigned width, unsigned height, uint8_t r,
+void Screen::drawRect(int x, int y, unsigned width, unsigned height, uint8_t r,
 	uint8_t g, uint8_t b, unsigned thickness) {
 
 	Uint32 color = SDL_MapRGB(drawbuffer->format, r, g, b);
@@ -405,7 +425,7 @@ void drawRect(int x, int y, unsigned width, unsigned height, uint8_t r,
 	SDL_FillRect(drawbuffer, &rect, color);
 }
 
-void fillRect(int x, int y, unsigned width, unsigned height, uint8_t r,
+void Screen::fillRect(int x, int y, unsigned width, unsigned height, uint8_t r,
 	uint8_t g, uint8_t b) {
 	SDL_Rect rect = {x, y, (int)width, (int)height};
 
@@ -413,16 +433,16 @@ void fillRect(int x, int y, unsigned width, unsigned height, uint8_t r,
 		SDL_MapRGB(drawbuffer->format, r, g, b));
 }
 
-void clearScreen(uint8_t r, uint8_t g, uint8_t b) {
+void Screen::clearScreen(uint8_t r, uint8_t g, uint8_t b) {
 	fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, r, g, b);
 }
 
-void setClipRegion(int x, int y, unsigned width, unsigned height) {
+void Screen::setClipRegion(int x, int y, unsigned width, unsigned height) {
 	SDL_Rect rect = {x, y, (int)width, (int)height};
 
 	SDL_SetClipRect(drawbuffer, &rect);
 }
 
-void unsetClipRegion(void) {
+void Screen::unsetClipRegion(void) {
 	SDL_SetClipRect(drawbuffer, NULL);
 }
