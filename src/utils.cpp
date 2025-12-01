@@ -127,6 +127,7 @@ void StringBuffer::resize(size_t newsize) {
 	strcpy(ptr, _buf);
 	delete[] _buf;
 	_buf = ptr;
+	_size = newsize;
 }
 
 void StringBuffer::vprintf(const char *fmt, va_list args) {
