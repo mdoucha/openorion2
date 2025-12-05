@@ -497,6 +497,10 @@ void TechListWidget::highlightItem(int group, int item) {
 	_curItem = item;
 }
 
+void TechListWidget::highlightFirstItem(void) {
+	highlightItem(_pages[_curPage], 0);
+}
+
 int TechListWidget::highlightedGroup(void) const {
 	return _curGroup;
 }
@@ -529,6 +533,10 @@ void TechListWidget::selectItem(int group, int item) {
 
 	_selGroup = group;
 	_selItem = item;
+}
+
+void TechListWidget::selectFirstItem(void) {
+	selectItem(_pages[_curPage], 0);
 }
 
 int TechListWidget::selectedGroup(void) const {

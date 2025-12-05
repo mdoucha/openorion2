@@ -73,11 +73,13 @@ public:
 		const TechListItem *items, unsigned itemCount);
 
 	void highlightItem(int group, int item);
+	void highlightFirstItem(void);
 	int highlightedGroup(void) const;
 	int highlightedItem(void) const;
 	Technology highlightedTechID(void) const;
 
 	void selectItem(int group, int item);
+	void selectFirstItem(void);
 	int selectedGroup(void) const;
 	int selectedItem(void) const;
 	Technology selectedTechID(void) const;
