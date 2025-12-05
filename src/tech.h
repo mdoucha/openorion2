@@ -55,7 +55,7 @@ private:
 	GuiCallback _onHighlightItem, _onSelectItem, _onExamineItem;
 	int _curGroup, _curItem, _selGroup, _selItem;
 	unsigned _groupCount, _maxGroups, _curPage, _pageCount, _maxPages;
-	unsigned _titleFont, _itemFont;
+	unsigned _titleFont, _itemFont, _extraSpacing, _startTick;
 	unsigned *_pages;
 	TechListGroup **_groups;
 
@@ -64,7 +64,8 @@ protected:
 
 public:
 	TechListWidget(unsigned x, unsigned y, unsigned width, unsigned height,
-		unsigned titleFont, unsigned itemFont);
+		unsigned titleFont, unsigned itemFont,
+		unsigned extraSpacing = 0);
 	~TechListWidget(void);
 
 	void clear(void);

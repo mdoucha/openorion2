@@ -41,14 +41,23 @@
 
 #define TECH_HIGHLIGHT_FRAMECOUNT 6
 #define TECH_HIGHLIGHT_SPEED 80
+#define TECH_SELECT_FRAMECOUNT 7
+#define TECH_SELECT_SPEED 80
 
-#define TECHLIST_TITLE_SPACING 4
-#define TECHLIST_ITEM_SPACING 2
-#define TECHLIST_GROUP_SPACING 8
+#define TECHLIST_TITLE_SPACING 3
+#define TECHLIST_ITEM_SPACING 1
+#define TECHLIST_GROUP_SPACING 6
 
 static const uint8_t techHighlightColors[TECH_HIGHLIGHT_FRAMECOUNT * 3] = {
 	RGB(0x248000), RGB(0x3c9804), RGB(0x44a008), RGB(0x5cb80c),
 	RGB(0x7cd814), RGB(0x9cf81c)
+};
+
+static const unsigned techSelectFontColors[TECH_SELECT_FRAMECOUNT] = {
+	FONT_COLOR_INFO_NORMAL, FONT_COLOR_INFO_BRIGHT1,
+	FONT_COLOR_INFO_BRIGHT2, FONT_COLOR_INFO_BRIGHT3,
+	FONT_COLOR_INFO_BRIGHT4, FONT_COLOR_INFO_BRIGHT5,
+	FONT_COLOR_INFO_BRIGHT6
 };
 
 static const ResearchArea area_list[MAX_RESEARCH_AREAS] = {
@@ -320,11 +329,13 @@ void TechListWidget::TechListGroup::clear(void) {
 }
 
 TechListWidget::TechListWidget(unsigned x, unsigned y, unsigned width,
-	unsigned height, unsigned titleFont, unsigned itemFont) :
-	Widget(x, y, width, height), _curGroup(-1), _curItem(-1),
-	_selGroup(-1), _selItem(-1), _groupCount(0), _maxGroups(16),
-	_curPage(0), _pageCount(1), _maxPages(16), _titleFont(titleFont),
-	_itemFont(itemFont), _pages(NULL), _groups(NULL) {
+	unsigned height, unsigned titleFont, unsigned itemFont,
+	unsigned extraSpacing) : Widget(x, y, width, height), _curGroup(-1),
+	_curItem(-1), _selGroup(-1), _selItem(-1), _groupCount(0),
+	_maxGroups(16), _curPage(0), _pageCount(1), _maxPages(16),
+	_titleFont(titleFont), _itemFont(itemFont),
+	_extraSpacing(extraSpacing), _startTick(0), _pages(NULL),
+	_groups(NULL) {
 
 	_groups = new TechListGroup*[_maxGroups];
 
@@ -352,8 +363,8 @@ int TechListWidget::updateHighlight(int x, int y) {
 
 	fnt = gameFonts->getFont(_itemFont);
 	titlefnt = gameFonts->getFont(_titleFont);
-	iheight = fnt->height() + TECHLIST_ITEM_SPACING;
-	theight = titlefnt->height() + TECHLIST_TITLE_SPACING;
+	iheight = fnt->height() + TECHLIST_ITEM_SPACING + _extraSpacing;
+	theight = titlefnt->height() + TECHLIST_TITLE_SPACING + _extraSpacing;
 
 	for (i = _pages[_curPage]; i < _pages[_curPage + 1]; i++) {
 		if (y < ypos) {
@@ -368,7 +379,8 @@ int TechListWidget::updateHighlight(int x, int y) {
 			break;
 		}
 
-		ypos += _groups[i]->height + TECHLIST_GROUP_SPACING;
+		ypos += _groups[i]->height + TECHLIST_GROUP_SPACING +
+			2 * _extraSpacing;
 	}
 
 	if (oldgroup != newgroup || olditem != newitem) {
@@ -420,7 +432,8 @@ void TechListWidget::addGroup(const char *title, unsigned color,
 		group->title = copystr(title);
 		group->color = color;
 		group->height = titlefnt->height() + TECHLIST_TITLE_SPACING +
-			itemCount * (fnt->height() + TECHLIST_ITEM_SPACING);
+			_extraSpacing + itemCount * (fnt->height() +
+			TECHLIST_ITEM_SPACING + _extraSpacing);
 		group->items = new TechListItem[itemCount];
 		memset(group->items, 0, itemCount * sizeof(TechListItem));
 		group->itemCount = itemCount;
@@ -436,7 +449,8 @@ void TechListWidget::addGroup(const char *title, unsigned color,
 	}
 
 	for (i = _pages[_pageCount - 1], ypos = 2; i <= _groupCount; i++) {
-		ypos += _groups[i]->height + TECHLIST_GROUP_SPACING;
+		ypos += _groups[i]->height + TECHLIST_GROUP_SPACING +
+			2 * _extraSpacing;
 	}
 
 	if (ypos < height() || !_groupCount) {
@@ -507,6 +521,10 @@ void TechListWidget::selectItem(int group, int item) {
 	if (unsigned(group) >= _groupCount ||
 		unsigned(item) >= _groups[group]->itemCount) {
 		return;
+	}
+
+	if (_selItem < 0 && item >= 0) {
+		_startTick = 0;
 	}
 
 	_selGroup = group;
@@ -597,41 +615,52 @@ void TechListWidget::handleMouseUp(int x, int y, unsigned button) {
 }
 
 void TechListWidget::redraw(int x, int y, unsigned curtick) {
-	unsigned i, j, color, selcolor, maxw = width();
+	unsigned i, j, color, hicolor, selcolor, maxw = width();
 	int ypos, tmpy;
 	Font *fnt, *titlefnt;
 	const uint8_t *pal;
+
+	if (_selItem >= 0 && !_startTick) {
+		_startTick = curtick;
+	}
 
 	fnt = gameFonts->getFont(_itemFont);
 	titlefnt = gameFonts->getFont(_titleFont);
 	x += getX();
 	y += getY() + 2;
-	// TODO: animated color
-	selcolor = FONT_COLOR_RESEARCH_BRIGHT;
+	hicolor = FONT_COLOR_RESEARCH_BRIGHT;
+	selcolor = bounceFrame(curtick - _startTick, TECH_SELECT_SPEED,
+		TECH_SELECT_FRAMECOUNT);
+	selcolor = techSelectFontColors[selcolor];
 	pal = Font::fontPalette(selcolor);
 
 	for (i = _pages[_curPage]; i < _pages[_curPage + 1]; i++) {
-		if (_curGroup == (int)i || _selGroup == (int)i) {
+		if (_selGroup == (int)i) {
 			color = selcolor;
+		} else if (_curGroup == (int)i) {
+			color = hicolor;
 		} else {
 			color = _groups[i]->color;
 		}
 
 		fitText(x + 2, y, maxw - 4, _titleFont, color,
 			_groups[i]->title, OUTLINE_NONE, 2);
-		y += titlefnt->height() + TECHLIST_TITLE_SPACING;
+		y += titlefnt->height() + TECHLIST_TITLE_SPACING +
+			_extraSpacing;
 
 		for (j = 0, ypos = y; j < _groups[i]->itemCount; j++) {
-			if ((_curGroup == (int)i && _curItem == (int)j) ||
-				(_selGroup == (int)i && _selItem == (int)j)) {
+			if (_selGroup == (int)i && _selItem == (int)j) {
 				color = selcolor;
+			} else if (_curGroup == (int)i && _curItem == (int)j) {
+				color = hicolor;
 			} else {
 				color = _groups[i]->items[j].color;
 			}
 
 			fitText(x + 12, ypos, maxw - 14, _itemFont, color,
 				_groups[i]->items[j].name, OUTLINE_NONE, 2);
-			ypos += fnt->height() + TECHLIST_ITEM_SPACING;
+			ypos += fnt->height() + TECHLIST_ITEM_SPACING +
+				_extraSpacing;
 
 			if (_selGroup == (int)i && _selItem == (int)j) {
 				tmpy = ypos - 3 - fnt->height() / 2;
@@ -646,7 +675,7 @@ void TechListWidget::redraw(int x, int y, unsigned curtick) {
 			}
 		}
 
-		y = ypos + TECHLIST_GROUP_SPACING;
+		y = ypos + TECHLIST_GROUP_SPACING + 2 * _extraSpacing;
 	}
 }
 
@@ -1013,7 +1042,7 @@ void ResearchListWindow::initWidgets(void) {
 	const uint8_t *pal = _bg->palette();
 
 	_list = new TechListWidget(14, 40, 228, 354, FONTSIZE_BIG,
-		FONTSIZE_MEDIUM);
+		FONTSIZE_MEDIUM, 1);
 	addWidget(_list);
 	_list->setMouseOutCallback(GuiMethod(*this,
 		&ResearchListWindow::clearHighlight));
