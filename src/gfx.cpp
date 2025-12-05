@@ -261,6 +261,9 @@ static const uint8_t font_palettes[FONT_COLOR_MAX][FONT_PALSIZE * 4] = {
 	{TRANSPARENT, SRGB(0x082808), SRGB(0x8000ac), SRGB(0x540074)},
 	{TRANSPARENT, SRGB(0x082808), SRGB(0xd07404), SRGB(0x945000)},
 	{TRANSPARENT, SRGB(0x082808), SRGB(0x900c0c)},
+
+	// FONT_COLOR_TECH_DIFF
+	{TRANSPARENT, SRGB(0x082808), SRGB(0x5cbc00)},
 };
 
 static size_t *loadFrameOffsets(SeekableReadStream &stream, unsigned count) {

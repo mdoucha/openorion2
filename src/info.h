@@ -20,11 +20,10 @@
 #ifndef INFO_H_
 #define INFO_H_
 
-#include "lbx.h"
-#include "gui.h"
-#include "gamestate.h"
+#include "tech.h"
 
 #define INFO_PANEL_COUNT 5
+#define REVIEW_GROUP_COUNT 4
 
 class HistoryGraphWidget : public Widget {
 private:
@@ -39,15 +38,29 @@ public:
 	void redraw(int x, int y, unsigned curtick);
 };
 
-class TechReviewWidget : public Widget {
+class TechReviewWidget : public CompositeWidget {
 private:
 	const GameState *_game;
-	int _activePlayer;
+	ChoiceWidget *_groupChoice;
+	TechListWidget *_reviewGroups[REVIEW_GROUP_COUNT];
+	Widget *_upButton, *_downButton;
+	GuiSprite *_techImage;
+	ImageAsset _gridImage;
+	TextLayout *_description;
+	int _activePlayer, _targetPlayer;
+
+	void initWidgets(void);
 
 public:
 	TechReviewWidget(unsigned x, unsigned y, unsigned width,
-		unsigned height, const GameState *game, int _activePlayer);
+		unsigned height, const GameState *game, int activePlayer,
+		int targetPlayer);
 	~TechReviewWidget(void);
+
+	void changeReviewGroup(int x, int y, int arg);
+	void changeHighlightedTech(int x, int y, int arg);
+	void previousListPage(int x, int y, int arg);
+	void nextListPage(int x, int y, int arg);
 
 	void redraw(int x, int y, unsigned curtick);
 };

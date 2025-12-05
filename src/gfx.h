@@ -213,7 +213,9 @@
 #define FONT_COLOR_INFO_ORANGE 154
 #define FONT_COLOR_INFO_ELIMINATED 155
 
-#define FONT_COLOR_MAX 156
+#define FONT_COLOR_TECH_DIFF 156
+
+#define FONT_COLOR_MAX 157
 
 #define RGB(x) (((x) >> 16) & 0xff), (((x) >> 8) & 0xff), ((x) & 0xff)
 #define SRGB(x) 0xff, RGB(x)
